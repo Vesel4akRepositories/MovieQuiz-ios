@@ -131,6 +131,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             // Показываем алерт с результатами
             alertPresenter.showResults(alertModel: alertModel)
         } else {
+            print("request new question 1")
             currentQuestionIndex += 1
             questionFactory.requestNextQuestion()
         }
@@ -160,10 +161,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
                                buttonText: "Попробовать еще раз") { [weak self] in
             guard let self = self else { return }
             
-            self.currentQuestionIndex = 0
-            self.correctCount = 0
-            
-            self.questionFactory.requestNextQuestion()
+            resetQuiz()
         }
         
         alertPresenter.showResults(alertModel: model)
@@ -178,6 +176,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         showNetworkError(message: error.localizedDescription)
     }
     
+    func didFailLoadPosterImage() {
+        let model = AlertModel(title: "Ошибка",
+                               message: "Ошибка загрузки постера", buttonText: "Ok", completion: {})
+        alertPresenter.showResults(alertModel: model)
+    }
     
 }
 

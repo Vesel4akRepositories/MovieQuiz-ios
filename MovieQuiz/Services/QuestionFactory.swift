@@ -11,7 +11,7 @@ class QuestionFactory : QuestionFactoryProtocol {
     private let moviesLoader: MoviesLoading
     private weak var delegate: QuestionFactoryDelegate?
     private var movies: [MostPopularMovie] = []
-
+    
     init(moviesLoader: MoviesLoading, delegate: QuestionFactoryDelegate?) {
         self.moviesLoader = moviesLoader
         self.delegate = delegate
@@ -25,11 +25,15 @@ class QuestionFactory : QuestionFactoryProtocol {
             guard let movie = self.movies[safe: index] else { return }
             
             var imageData = Data()
-           
-           do {
+            
+            do {
                 imageData = try Data(contentsOf: movie.resizedImageURL)
             } catch {
-                print("Failed to load image")
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    self.delegate?.didFailLoadPosterImage()
+                    return
+                }
             }
             
             let rating = Float(movie.rating) ?? 0
@@ -38,8 +42,8 @@ class QuestionFactory : QuestionFactoryProtocol {
             let correctAnswer = rating > 7
             
             let question = QuizQuestion(image: imageData,
-                                         text: text,
-                                         correctAnswer: correctAnswer)
+                                        text: text,
+                                        correctAnswer: correctAnswer)
             
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
@@ -63,51 +67,3 @@ class QuestionFactory : QuestionFactoryProtocol {
         }
     }
 }
-
-
-
-/*
- 
- private let questions: [QuizQuestion] = [
-     QuizQuestion(
-         image: "The Godfather",
-         text: "Рейтинг этого фильма больше чем 6?",
-         correctAnswer: true),
-     QuizQuestion(
-         image: "The Dark Knight",
-         text: "Рейтинг этого фильма больше чем 6?",
-         correctAnswer: true),
-     QuizQuestion(
-         image: "Kill Bill",
-         text: "Рейтинг этого фильма больше чем 6?",
-         correctAnswer: true),
-     QuizQuestion(
-         image: "The Avengers",
-         text: "Рейтинг этого фильма больше чем 6?",
-         correctAnswer: true),
-     QuizQuestion(
-         image: "Deadpool",
-         text: "Рейтинг этого фильма больше чем 6?",
-         correctAnswer: true),
-     QuizQuestion(
-         image: "The Green Knight",
-         text: "Рейтинг этого фильма больше чем 6?",
-         correctAnswer: true),
-     QuizQuestion(
-         image: "Old",
-         text: "Рейтинг этого фильма больше чем 6?",
-         correctAnswer: false),
-     QuizQuestion(
-         image: "The Ice Age Adventures of Buck Wild",
-         text: "Рейтинг этого фильма больше чем 6?",
-         correctAnswer: false),
-     QuizQuestion(
-         image: "Tesla",
-         text: "Рейтинг этого фильма больше чем 6?",
-         correctAnswer: false),
-     QuizQuestion(
-         image: "Vivarium",
-         text: "Рейтинг этого фильма больше чем 6?",
-         correctAnswer: false)
- ]  
- */
