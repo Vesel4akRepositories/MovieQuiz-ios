@@ -6,12 +6,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private weak var movieImage: UIImageView!
     @IBOutlet private weak var questionLabel: UILabel!
     
+    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
+    
+    
     private var correctCount = 0
     
     private var currentQuestionIndex = 0
     
     private let questionsAmount: Int = 10
-    private lazy var questionFactory: QuestionFactoryProtocol = QuestionFactory(delegate: self)
+    private lazy var questionFactory: QuestionFactoryProtocol = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
     private var currentQuestion: QuizQuestion?
     private let statisticService: StatisticService = StatisticServiceImplementation()
     private let alertPresenter = AlertPresenter()
@@ -19,7 +22,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         alertPresenter.uiViewController = self
-        questionFactory.requestNextQuestion()
+        showLoadingIndicator()
+        questionFactory.loadData()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -62,11 +66,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        let questionStep = QuizStepViewModel(
-            image: UIImage(named: model.image) ?? UIImage(),
+        QuizStepViewModel(
+            image: UIImage(data: model.image) ?? UIImage(),
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-        return questionStep
     }
     
     private func triggerHapticFeedback(_ notificationType: UINotificationFeedbackGenerator.FeedbackType) {
@@ -138,6 +141,44 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         correctCount = 0
         questionFactory.requestNextQuestion()
     }
+    
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
+    }
+    
+    private func hideLoadingIndicator(){
+        activityIndicator.isHidden = true
+        activityIndicator.stopAnimating()
+    }
+    
+    private func showNetworkError(message: String) {
+        hideLoadingIndicator()
+        
+        let model = AlertModel(title: "Ошибка",
+                               message: message,
+                               buttonText: "Попробовать еще раз") { [weak self] in
+            guard let self = self else { return }
+            
+            self.currentQuestionIndex = 0
+            self.correctCount = 0
+            
+            self.questionFactory.requestNextQuestion()
+        }
+        
+        alertPresenter.showResults(alertModel: model)
+    }
+    
+    func didLoadDataFromServer() {
+        hideLoadingIndicator()
+        questionFactory.requestNextQuestion()
+    }
+    
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription)
+    }
+    
+    
 }
 
 
