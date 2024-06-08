@@ -12,22 +12,23 @@ protocol AlertPresenterProtocol  {
     func showResults(alertModel : AlertModel) -> Void
 }
 
-class AlertPresenter : AlertPresenterProtocol{
+class AlertPresenter: AlertPresenterProtocol {
     weak var uiViewController: UIViewController?
     
     func showResults(alertModel: AlertModel) {
-        guard let uiViewController = uiViewController else {return}
+        guard let uiViewController = uiViewController else { return }
+        
         let alert = UIAlertController(
             title: alertModel.title,
             message: alertModel.message,
-            preferredStyle: .alert)
+            preferredStyle: .alert
+        )
         
-        let action = UIAlertAction(title: alertModel.buttonText, style: .default) {_ in
+        let action = UIAlertAction(title: alertModel.buttonText, style: .default) { _ in
             alertModel.completion()
         }
         
         alert.addAction(action)
-        
-        uiViewController.present(alert, animated: true, completion: alertModel.completion)
+        uiViewController.present(alert, animated: true, completion: nil)
     }
 }
